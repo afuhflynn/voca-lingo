@@ -1,17 +1,23 @@
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   images: {
-    domains: ["res.cloudinary.com"],
+    domains: ["uploadthing.com", "https://dashboard.vapi.ai"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "res.cloudinary.com",
+        hostname: "uploadthing.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "dashboard.vapi.ai",
         pathname: "**",
       },
     ],
   },
-}
+};
 
-module.exports = nextConfig
-
+module.exports = nextConfig;

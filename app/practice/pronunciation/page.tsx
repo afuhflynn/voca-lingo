@@ -3,26 +3,220 @@
 import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, VolumeIcon as VolumeUp, Mic, MicOff, Play, RotateCcw } from "lucide-react"
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  VolumeIcon as VolumeUp, 
+  Mic, 
+  MicOff, 
+  Play, 
+  RotateCcw,
+  CheckCircle,
+  XCircle,
+  Star,
+  InfoIcon,
+  Download,
+  Save,
+  Trophy,
+  Sparkles
+} from "lucide-react"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { vapi } from "@/lib/vapi"
+import { Skeleton } from "@/components/ui/skeleton"
 
+// Types for the pronunciation practice system
 type PronunciationItem = {
-  id: number
-  phrase: string
-  translation: string
-  audioUrl: string // In a real app, this would be a URL to an audio file
+  id: string;
+  phrase: string;
+  translation: string;
+  audioUrl: string; // URL to an audio file
+  difficulty: 'easy' | 'medium' | 'hard';
+  category?: string;
+  notes?: string;
+  phonetics?: string;
 }
+
+type PronunciationProgress = {
+  practiceCount: number;
+  correctCount: number;
+  totalScore: number;
+  averageScore: number;
+  xpEarned: number;
+  lastPracticeDate?: string;
+  streak: number;
+}
+
+type FeedbackDetail = {
+  text: string;
+  type: 'positive' | 'negative' | 'neutral';
+  timeStamp?: number;
+}
+
+// Function to save data to localStorage for offline support
+const saveToLocalStorage = (key: string, data: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+};
+
+// Function to load data from localStorage
+const loadFromLocalStorage = (key: string, defaultValue: any) => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing saved data:', e);
+      }
+    }
+  }
+  return defaultValue;
+};
+
+// Waveform visualization component
+const WaveformVisualizer = ({ audioBlob, isRecording }: { audioBlob?: Blob, isRecording: boolean }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>(0);
+  const analyzerRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  
+  useEffect(() => {
+    if (isRecording && canvasRef.current) {
+      const drawWaveform = () => {
+        if (!canvasRef.current || !analyzerRef.current || !dataArrayRef.current) return;
+        
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        analyzerRef.current.getByteTimeDomainData(dataArrayRef.current);
+        
+        ctx.fillStyle = 'rgb(30, 30, 30)';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgb(130, 30, 255)';
+        ctx.beginPath();
+        
+        const sliceWidth = width / dataArrayRef.current.length;
+        let x = 0;
+        
+        for (let i = 0; i < dataArrayRef.current.length; i++) {
+          const v = dataArrayRef.current[i] / 128.0;
+          const y = v * height / 2;
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+          
+          x += sliceWidth;
+        }
+        
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        
+        animationRef.current = requestAnimationFrame(drawWaveform);
+      };
+      
+      // Setup analyzer for real-time visualization
+      const setupAnalyzer = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const audioContext = new AudioContext();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyzer = audioContext.createAnalyser();
+          analyzer.fftSize = 2048;
+          
+          source.connect(analyzer);
+          analyzerRef.current = analyzer;
+          
+          const bufferLength = analyzer.frequencyBinCount;
+          dataArrayRef.current = new Uint8Array(bufferLength);
+          
+          animationRef.current = requestAnimationFrame(drawWaveform);
+        } catch (error) {
+          console.error('Error setting up audio analyzer:', error);
+        }
+      };
+      
+      setupAnalyzer();
+      
+      return () => {
+        cancelAnimationFrame(animationRef.current);
+        // Clean up analyzer when unmounting
+        if (analyzerRef.current) {
+          // Disconnect analyzer
+        }
+      };
+    }
+  }, [isRecording]);
+  
+  // If we have a blob but not recording, just draw a static waveform
+  useEffect(() => {
+    if (audioBlob && !isRecording && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      ctx.fillStyle = 'rgb(30, 30, 30)';
+      ctx.fillRect(0, 0, width, height);
+      
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgb(130, 30, 255)';
+      ctx.beginPath();
+      
+      // Draw a dummy waveform for completed recording
+      ctx.moveTo(0, height / 2);
+      
+      // Create a more dynamic representation
+      for (let i = 0; i < width; i += 5) {
+        const normalizedValue = Math.random() * 0.5 + 0.25; // Between 0.25 and 0.75
+        const y = normalizedValue * height;
+        ctx.lineTo(i, y);
+      }
+      
+      ctx.lineTo(width, height / 2);
+      ctx.stroke();
+    }
+  }, [audioBlob, isRecording]);
+  
+  return (
+    <canvas 
+      ref={canvasRef} 
+      width={600} 
+      height={100} 
+      className="w-full h-24 rounded-lg border border-gray-200 dark:border-gray-700"
+    />
+  );
+};
 
 // Mock pronunciation data for different languages
 const pronunciationData: Record<string, PronunciationItem[]> = {
   spanish: [
     {
-      id: 1,
+      id: "1",
       phrase: "Buenos días",
       translation: "Good morning",
-      audioUrl: "/audio/buenos-dias.mp3",
+      audioUrl: "/audio/spanish/buenos-dias.mp3",
+      difficulty: "easy",
+      phonetics: "bweh-nohs dee-ahs",
+      category: "greetings"
     },
     {
       id: 2,
@@ -67,30 +261,95 @@ const pronunciationData: Record<string, PronunciationItem[]> = {
 }
 
 export default function PronunciationPracticePage() {
-  const searchParams = useSearchParams()
-  const [language, setLanguage] = useState<string>("spanish")
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordedAudio, setRecordedAudio] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [score, setScore] = useState<number | null>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const [language, setLanguage] = useState<string>("spanish");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackDetails, setFeedbackDetails] = useState<FeedbackDetail[]>([]);
+  const [score, setScore] = useState<number | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [xpReward, setXpReward] = useState(0);
+  const [mode, setMode] = useState<"learn" | "practice" | "challenge">("learn");
+  
+  // Progress tracking
+  const [pronunciationProgress, setPronunciationProgress] = useState<PronunciationProgress>({
+    practiceCount: 0,
+    correctCount: 0,
+    totalScore: 0,
+    averageScore: 0,
+    xpEarned: 0,
+    streak: 0
+  });
+  
+  // Session stats
+  const [sessionStats, setSessionStats] = useState({
+    attemptsCount: 0,
+    successCount: 0,
+    totalScore: 0,
+    xpEarned: 0,
+    startTime: Date.now(),
+  });
+  
+  // Refs for audio handling
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  
+  // Vapi assistant reference
+  const vapiAssistantRef = useRef<any>(null);
 
   useEffect(() => {
-    const langParam = searchParams.get("lang")
+    const langParam = searchParams.get("lang");
     if (langParam && pronunciationData[langParam]) {
-      setLanguage(langParam)
+      setLanguage(langParam);
     }
-  }, [searchParams])
-
-  const pronunciationItems = pronunciationData[language] || pronunciationData.spanish
-  const currentItem = pronunciationItems[currentIndex]
-
-  useEffect(() => {
-    setProgress(((currentIndex + 1) / pronunciationItems.length) * 100)
-  }, [currentIndex, pronunciationItems.length])
+    
+    // Load progress from localStorage (offline support)
+    const savedProgress = loadFromLocalStorage(`pronunciation-progress-${langParam || 'spanish'}`, {
+      practiceCount: 0,
+      correctCount: 0,
+      totalScore: 0,
+      averageScore: 0,
+      xpEarned: 0,
+      streak: 0
+    });
+    
+    setPronunciationProgress(savedProgress);
+    
+    // Check network connectivity
+    const isOffline = !navigator.onLine;
+    setOfflineMode(isOffline);
+    
+    // Add event listeners for online/offline status
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+      
+      // Cleanup audio resources when unmounting
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [searchParams]);
+  
+  // Handle online/offline status changes
+  const handleOnlineStatusChange = () => {
+    const isOffline = !navigator.onLine;
+    setOfflineMode(isOffline);
+    
+    toast({
+      title: isOffline ?
 
   const handleNext = () => {
     if (currentIndex < pronunciationItems.length - 1) {

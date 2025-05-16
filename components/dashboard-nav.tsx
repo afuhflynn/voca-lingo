@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Mic,
@@ -13,7 +13,7 @@ import {
   Settings,
   HelpCircle,
   Info,
-} from "lucide-react"
+} from "lucide-react";
 
 const navItems = [
   {
@@ -23,48 +23,48 @@ const navItems = [
   },
   {
     title: "Record",
-    href: "/record",
+    href: "/dashboard/record",
     icon: Mic,
   },
   {
     title: "Transcriptions",
-    href: "/transcriptions",
+    href: "/dashboard/transcriptions",
     icon: FileText,
   },
   {
     title: "AI Coach",
-    href: "/chat",
+    href: "/dashboard/chat",
     icon: MessageSquareText,
   },
   {
     title: "Chat History",
-    href: "/chat/history",
+    href: "/dashboard/chat/dashboard/history",
     icon: History,
   },
   {
     title: "Profile",
-    href: "/profile",
+    href: "/dashboard/profile",
     icon: User,
   },
   {
     title: "Settings",
-    href: "/settings",
+    href: "/dashboard/settings",
     icon: Settings,
   },
   {
     title: "Help & Support",
-    href: "/help",
+    href: "/dashboard/help",
     icon: HelpCircle,
   },
   {
     title: "About",
-    href: "/about",
+    href: "/dashboard/about",
     icon: Info,
   },
-]
+];
 
 export function DashboardNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <nav className="flex-1 overflow-auto p-2">
@@ -76,8 +76,8 @@ export function DashboardNav() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                 pathname === item.href
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted",
+                  ? "bg-primary/dashboard/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -87,6 +87,5 @@ export function DashboardNav() {
         ))}
       </ul>
     </nav>
-  )
+  );
 }
-
