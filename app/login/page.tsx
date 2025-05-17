@@ -1,34 +1,70 @@
-import { AuthForm } from "@/components/auth-form"
-import { ModeToggle } from "@/components/mode-toggle"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Globe } from "lucide-react"
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted transition-all duration-300 flex flex-col">
-      <header className="container max-w-6xl mx-auto px-4 py-6">
-        <nav className="flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative">
-              <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 opacity-75 blur-sm group-hover:opacity-100 transition duration-200"></div>
-              <h1 className="relative text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Vox
-              </h1>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-pink-950/20">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl gradient-border">
+          <div className="flex justify-center mb-6">
+            <Link href="/" className="flex items-center gap-2">
+              <Globe className="h-8 w-8 text-indigo-500" />
+              <span className="text-2xl font-bold gradient-text">Vocalingo</span>
+            </Link>
+          </div>
+
+          <h1 className="text-2xl font-bold text-center mb-6">Welcome Back</h1>
+
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="you@example.com" />
             </div>
-          </Link>
-          <ModeToggle />
-        </nav>
-      </header>
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <AuthForm defaultTab="login" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/forgot-password" className="text-xs text-indigo-500 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <Input id="password" type="password" placeholder="••••••••" />
+            </div>
+
+            <Button type="submit" className="w-full gradient-bg">
+              Sign In
+            </Button>
+          </form>
+
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Don't have an account?</span>
+            <Link href="/signup" className="text-sm text-indigo-500 hover:underline">
+              Sign up
+            </Link>
+          </div>
+
+          <div className="mt-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <Button variant="outline" className="w-full">
+              Google
+            </Button>
+            <Button variant="outline" className="w-full">
+              Apple
+            </Button>
+          </div>
         </div>
-      </main>
-
-      <footer className="py-6 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Vox. All rights reserved.</p>
-      </footer>
+      </div>
     </div>
   )
 }
-

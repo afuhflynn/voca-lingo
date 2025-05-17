@@ -1,179 +1,204 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Sparkles } from "lucide-react"
+import type React from "react"
 
-interface Message {
-  id: string
-  content: string
-  sender: "user" | "ai"
-  timestamp: Date
-}
+import { useState, useRef, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Mic, MicOff, Send, VolumeIcon as VolumeUp, ChevronLeft, Settings, MoreVertical, Zap } from "lucide-react"
+import Link from "next/link"
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
+  const [isRecording, setIsRecording] = useState(false)
+  const [messages, setMessages] = useState([
     {
-      id: "1",
-      content: "Hello! I'm your AI productivity coach. How can I help you today?",
-      sender: "ai",
-      timestamp: new Date(),
+      role: "assistant",
+      content: "¡Hola! ¿Cómo estás hoy?",
+      translation: "Hello! How are you today?",
+    },
+    {
+      role: "user",
+      content: "Estoy bien, gracias.",
+      feedback: { correct: true, message: "Great pronunciation!" },
+    },
+    {
+      role: "assistant",
+      content: "¡Qué bueno! ¿Qué hiciste este fin de semana?",
+      translation: "That's good! What did you do this weekend?",
     },
   ])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [inputValue, setInputValue] = useState("")
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      sender: "user",
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponses = [
-        "That's a great question! To improve your productivity, try breaking down large tasks into smaller, manageable chunks.",
-        "I recommend the Pomodoro Technique - work for 25 minutes, then take a 5-minute break. It can help maintain focus and prevent burnout.",
-        "Have you tried time-blocking your calendar? It's an effective way to allocate specific time slots for different tasks.",
-        "Remember that taking breaks is essential for productivity. Regular short breaks can actually improve your focus and creativity.",
-        "For better focus, consider minimizing distractions like notifications or background noise during your work sessions.",
-      ]
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponses[Math.floor(Math.random() * aiResponses.length)],
-        sender: "ai",
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1500)
+  const toggleRecording = () => {
+    setIsRecording(!isRecording)
   }
 
+  const handleSend = () => {
+    if (inputValue.trim()) {
+      setMessages([
+        ...messages,
+        {
+          role: "user",
+          content: inputValue,
+          feedback: { correct: true, message: "Good job!" },
+        },
+      ])
+      setInputValue("")
+
+      // Simulate AI response
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "¡Muy bien! Sigamos practicando.",
+            translation: "Very good! Let's continue practicing.",
+          },
+        ])
+      }, 1000)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">AI Coach</h1>
-        <p className="text-muted-foreground">Chat with your AI productivity coach for tips and insights</p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 border-b">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="icon">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                <span className="text-indigo-600 dark:text-indigo-300 font-bold">ES</span>
+              </div>
+              <div>
+                <h1 className="font-bold">Spanish Practice</h1>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-yellow-500" />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Intermediate</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </header>
 
-      <Card className="relative overflow-hidden border-2 h-[70vh] flex flex-col">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 dark:from-purple-500/10 dark:via-pink-500/10 dark:to-blue-500/10"></div>
+      <main className="flex-1 container mx-auto px-4 py-6 overflow-hidden flex flex-col">
+        <Card className="flex-1 overflow-hidden flex flex-col gradient-border">
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+                      message.role === "user"
+                        ? "bg-indigo-100 dark:bg-indigo-900/50 rounded-tr-sm"
+                        : "bg-white dark:bg-gray-800 rounded-tl-sm"
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
 
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Productivity Coach
-          </CardTitle>
-          <CardDescription>Ask questions about productivity, time management, and more</CardDescription>
-        </CardHeader>
+                    {message.translation && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{message.translation}</p>
+                    )}
 
-        <CardContent className="flex-1 overflow-hidden">
-          <ScrollArea className="h-[calc(70vh-180px)]">
-            <div className="space-y-4 p-1">
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`flex gap-3 max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : ""}`}>
-                    <Avatar className="h-8 w-8 mt-1">
-                      {message.sender === "ai" ? (
-                        <>
-                          <AvatarImage src="/placeholder-bot.jpg" alt="AI" />
-                          <AvatarFallback className="bg-primary/20 text-primary">AI</AvatarFallback>
-                        </>
-                      ) : (
-                        <>
-                          <AvatarImage src="/placeholder-user.jpg" alt="You" />
-                          <AvatarFallback>JD</AvatarFallback>
-                        </>
-                      )}
-                    </Avatar>
-                    <div
-                      className={`rounded-lg px-4 py-2 ${
-                        message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                      }`}
-                    >
-                      <p>{message.content}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          message.sender === "user" ? "text-primary-foreground/80" : "text-muted-foreground"
-                        }`}
-                      >
-                        {new Intl.DateTimeFormat("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }).format(message.timestamp)}
-                      </p>
-                    </div>
+                    {message.feedback && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {message.feedback.correct ? (
+                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span className="text-xs">{message.feedback.message}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <span className="text-xs">{message.feedback.message}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {message.role === "assistant" && (
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full ml-auto block mt-1">
+                        <VolumeUp className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
-
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex gap-3 max-w-[80%]">
-                    <Avatar className="h-8 w-8 mt-1">
-                      <AvatarFallback className="bg-primary/20 text-primary">AI</AvatarFallback>
-                    </Avatar>
-                    <div className="rounded-lg px-4 py-2 bg-muted">
-                      <div className="flex gap-1">
-                        <div
-                          className="w-2 h-2 rounded-full bg-primary/60 animate-bounce"
-                          style={{ animationDelay: "0ms" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 rounded-full bg-primary/60 animate-bounce"
-                          style={{ animationDelay: "150ms" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 rounded-full bg-primary/60 animate-bounce"
-                          style={{ animationDelay: "300ms" }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div ref={messagesEndRef} />
             </div>
-          </ScrollArea>
-        </CardContent>
+          </div>
 
-        <CardFooter className="border-t bg-card">
-          <form
-            className="flex w-full gap-2"
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSendMessage()
-            }}
-          >
-            <Input
-              placeholder="Type your message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send message</span>
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
+          <div className="p-4 border-t">
+            <div className="relative">
+              <textarea
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type in Spanish or tap the mic to speak..."
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 py-3 px-4 pr-24 bg-transparent resize-none"
+                rows={2}
+              />
+              <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                <Button
+                  variant={isRecording ? "destructive" : "default"}
+                  size="icon"
+                  className={`rounded-full ${isRecording ? "" : "gradient-bg"}`}
+                  onClick={toggleRecording}
+                >
+                  {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={handleSend}
+                  disabled={!inputValue.trim()}
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            {isRecording && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="voice-wave">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span>Listening... Speak in Spanish</span>
+              </div>
+            )}
+          </div>
+        </Card>
+      </main>
     </div>
   )
 }
-

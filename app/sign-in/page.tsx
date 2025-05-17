@@ -4,18 +4,20 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { githubSignIn } from "@/lib/actions/github-signin";
 import { googleSignIn } from "@/lib/actions/google-signin";
+import Logo from "@/components/ui/logo";
 
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
+        <div className="w-full flex items-center justify-center">
+          <Logo hideText />
+        </div>
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center text-primary">
             Sign in to VocaLingo
@@ -29,23 +31,20 @@ export default function SignInPage() {
             <Button
               variant="outline"
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90"
+              size={"lg"}
+              className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 hover:text-white"
             >
               <Github className="h-4 w-4" />
               Sign in with GitHub
             </Button>
           </form>
-
-          <div className="flex items-center gap-2 my-2">
-            <Separator className="flex-grow" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <Separator className="flex-grow" />
-          </div>
           <form action={googleSignIn}>
             <Button
               variant="outline"
               type="submit"
+              size={"lg"}
               className="w-full flex items-center justify-center gap-2 border border-input"
+              disabled
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -70,9 +69,6 @@ export default function SignInPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm text-muted-foreground">
-          By signing in, you agree to our Terms of Service and Privacy Policy
-        </CardFooter>
       </Card>
     </div>
   );

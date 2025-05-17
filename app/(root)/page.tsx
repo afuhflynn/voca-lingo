@@ -6,7 +6,6 @@ export default function LandingPage() {
   return (
     <div className="h-full w-full bg-background py-12 md:py-20 overflow-hidden flex flex-col justify-center items-center text-center">
       <div className="relative mb-14">
-        <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 opacity-75 blur-lg"></div>
         <h1 className="relative text-4xl md:text-6xl font-bold leading-tight">
           Learn Languages with{" "}
           <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -25,9 +24,6 @@ export default function LandingPage() {
             Get Started
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
-        </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/languages">Explore Languages</Link>
         </Button>
       </div>
     </div>
