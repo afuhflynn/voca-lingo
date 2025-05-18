@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "postinstall": "prisma generate",
-    "build": "next build",
+    "build": "npx prisma generate & next build",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "start": "next start",
     "lint": "next lint"
