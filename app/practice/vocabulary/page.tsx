@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ export default function VocabularyPracticePage() {
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const router = useRouter();
 
   // Initialize language from URL
   useEffect(() => {
@@ -129,11 +130,11 @@ export default function VocabularyPracticePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href="/dashboard">
-        <Button variant="ghost" className="mb-4">
+      <div className="pt-6 pl-3">
+        <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
           <ArrowLeft /> Back
         </Button>
-      </Link>
+      </div>
 
       <h1 className="text-3xl font-bold mb-2">Vocabulary Practice</h1>
       <p className="text-slate-600 mb-6">Practice your {language} words.</p>

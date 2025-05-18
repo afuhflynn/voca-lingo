@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -105,6 +105,7 @@ export default function ConversationPracticePage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const router = useRouter();
 
   // Auto-scroll
   useEffect(() => {
@@ -183,11 +184,11 @@ export default function ConversationPracticePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href="/dashboard">
-        <Button variant="ghost" className="mb-4">
+      <div className="pt-6 pl-3">
+        <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
           <ArrowLeft /> Back
         </Button>
-      </Link>
+      </div>
 
       <h1 className="text-2xl font-bold mb-2">Conversation Practice</h1>
       <p className="text-muted-foreground mb-6">

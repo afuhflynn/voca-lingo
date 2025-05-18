@@ -1,5 +1,9 @@
 # Vocalingo 🎤🌍
 
+## Preview
+
+![Home page preview](./public/preview/voca-lingo-preview.png)
+
 Vocalingo is a voice-powered, AI-based interactive language tutor. It helps users learn new languages through vocabulary quizzes, real-time pronunciation feedback, and AI-powered conversational practice.
 
 ## ✨ Features
@@ -14,14 +18,14 @@ Vocalingo is a voice-powered, AI-based interactive language tutor. It helps user
 
 - Frontend: Next.js, TailwindCSS, TypeScript, Vapi SDK
 - Backend: Node.js / Next.js API Routes, MongoDB, OpenAI, Whisper
-- Tools: Vercel, ElevenLabs, Framer Motion
+- Tools: Vercel
 
 ## 🚀 Getting Started
 
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/voca-lingo.git
+git clone https://github.com/afuhflynn/voca-lingo.git
 cd voca-lingo
 ```
 
@@ -36,10 +40,10 @@ npm install or pnpm install
 Create a ```.env``` file:
 
 ```bash
-OPENAI_API_KEY=
+# Examples of even variables required
+GOOGLE_GEMINI_API_KEY=
 MONGODB_URI=
 VAPI_API_KEY=
-ELEVENLABS_API_KEY=
 ```
 
 ### 4. Run the App

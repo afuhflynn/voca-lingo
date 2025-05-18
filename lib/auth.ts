@@ -12,6 +12,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GitHub({
       clientId: process.env.AUTH_GITHUB_CLIENT_ID!,
       clientSecret: process.env.AUTH_GITHUB_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email || null,
+          image: profile.avatar_url || null,
+          username: profile.login as string,
+          bio: profile.bio as string | null,
+        };
+      },
     }),
     Google({
       clientId: process.env.AUTH_GOOGLE_CLIENT_ID!,
@@ -32,7 +42,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       try {
         if (token.sub && session.user) {
-          session.user.id = token.sub;
+          session.user.id = token.id as string;
+          session.user.username = token.username as string;
+          session.user.bio = token.bio as string | null;
+          session.user.signedInAt = token.signedInAt as string;
         }
         return session;
       } catch (error) {
@@ -43,7 +56,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       try {
         if (user) {
-          token.sub = user.id;
+          token.id = user.id?.toString() as string;
+          token.username = (user as any).username;
+          token.bio = (user as any).bio;
+          token.signedInAt = new Date().toISOString();
         }
         return token;
       } catch (error) {

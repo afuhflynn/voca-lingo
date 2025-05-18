@@ -1,4 +1,7 @@
 import Navbar from "@/components/navbar";
+import Logo from "@/components/ui/logo";
+import { Github, GithubIcon, Mail } from "lucide-react";
+import Link from "next/link";
 
 export default function RootLayout({
   children,
@@ -8,7 +11,7 @@ export default function RootLayout({
   return (
     <div className="w-screen h-screen overflow-hidden">
       <Navbar />
-      <main className="h-full w-full">{children}</main>
+      <main className="h-auto w-full">{children}</main>
     </div>
   );
 }

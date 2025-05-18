@@ -10,10 +10,17 @@ export async function middleware(req: NextRequest) {
   // Check if the user is authenticated
   const isAuthenticated = session?.user !== undefined;
 
+  // Redirect authenticated users to the dashboard if they try to access the sign-up page
+  if (isAuthenticated && pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   // If the user is not authenticated and trying to access a protected route, redirect to login
   if (
     !isAuthenticated &&
-    (pathname.startsWith("/dashboard") || pathname.startsWith("/practice"))
+    (pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/practice") ||
+      pathname.startsWith("/chat"))
   ) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
@@ -23,8 +30,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Redirect authenticated users to the dashboard if they try to access the sign-up page
-  if (isAuthenticated && pathname === "/") {
+  // If the user is not authenticated and trying to access the signout page, redirect to home page
+  if (!isAuthenticated && pathname === "/sign-out") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  // If the user is authenticated and trying to access the login page, redirect to dashboard
+  if (isAuthenticated && pathname.endsWith("/lessons")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

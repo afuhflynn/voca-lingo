@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
 import authConfig from "@/lib/auth.config";
+import { LogOut } from "lucide-react";
 import NextAuth from "next-auth";
 import Link from "next/link";
 
@@ -53,13 +54,19 @@ export async function UserNav() {
         </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <form
-          // action={signOut}
+          <Link
+            href={"/sign-out"}
+            className="cursor-pointer w-full flex items-center justify-start"
           >
-            <Button type="submit" variant="ghost" className="w-full text-left">
+            <Button
+              type="submit"
+              variant="ghost"
+              className="w-full flex items-center justify-start"
+            >
+              <LogOut />
               Sign out
             </Button>
-          </form>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

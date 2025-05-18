@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { Globe } from "lucide-react";
 import Link from "next/link";
 
 const Logo = ({
@@ -11,17 +12,17 @@ const Logo = ({
   size?: number;
 }) => {
   return (
-    <div className="flex items-center">
-      <Link href={"/"}>
-        <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-1">
-          <Image
-            src="/voca-lingo.png"
-            width={size || 50}
-            height={size || 50}
-            alt="Logo"
-          />{" "}
-          {!hideText && <h1 className={`text-4xl ${className}`}>VocaLingo</h1>}
-        </div>
+    <div className="flex items-center gap-2">
+      <Link href="/" className="flex items-center gap-2">
+        <Globe className={cn("h-8 w-8 text-indigo-500", size)} />
+        {!hideText && (
+          <span
+            className={`text-2xl font-bold gradient-text hidden sm:block ${className}`}
+            style={{ fontSize: size }}
+          >
+            VocaLingo
+          </span>
+        )}
       </Link>
     </div>
   );

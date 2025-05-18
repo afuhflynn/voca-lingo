@@ -1,204 +1,248 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Mic, ChevronLeft, Globe, BotIcon } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import Logo from "@/components/ui/logo";
+import { loadVapiEnvs } from "@/lib/vapi";
+import { config } from "dotenv";
+import { toast } from "@/hooks/use-toast";
+import Vapi from "@vapi-ai/web";
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Mic, MicOff, Send, VolumeIcon as VolumeUp, ChevronLeft, Settings, MoreVertical, Zap } from "lucide-react"
-import Link from "next/link"
+// load envs
+config();
 
 export default function ChatPage() {
-  const [isRecording, setIsRecording] = useState(false)
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "¡Hola! ¿Cómo estás hoy?",
-      translation: "Hello! How are you today?",
-    },
-    {
-      role: "user",
-      content: "Estoy bien, gracias.",
-      feedback: { correct: true, message: "Great pronunciation!" },
-    },
-    {
-      role: "assistant",
-      content: "¡Qué bueno! ¿Qué hiciste este fin de semana?",
-      translation: "That's good! What did you do this weekend?",
-    },
-  ])
-  const [inputValue, setInputValue] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording)
-  }
+  // Vapi api and assistant keys set up
+  const vapiKeys = loadVapiEnvs();
+  const vapi = new Vapi(vapiKeys.apiKey as string);
 
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      setMessages([
-        ...messages,
-        {
-          role: "user",
-          content: inputValue,
-          feedback: { correct: true, message: "Good job!" },
-        },
-      ])
-      setInputValue("")
+  const handleStartSession = async () => {
+    setIsRecording((prev) => !prev);
+    setIsLoading(true);
+    await vapi.start(vapiKeys.assistantKey);
+    setCurrentQuestion("");
+  };
 
-      // Simulate AI response
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: "¡Muy bien! Sigamos practicando.",
-            translation: "Very good! Let's continue practicing.",
-          },
-        ])
-      }, 1000)
-    }
-  }
+  const handleStopSession = async () => {
+    setIsRecording((prev) => !prev);
+    setCurrentQuestion("");
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
+    vapi.stop();
+  };
 
-  // Auto scroll to bottom when messages change
+  // Handle ai call backs
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    const handleCallStartState = async () => {
+      setIsLoading(false);
+      toast({
+        title: "Call started",
+        description: "You can start speaking now.",
+        duration: 3000,
+      });
+      setCurrentQuestion("AI is waiting for your response...");
+    };
+
+    const handleCallEndState = async () => {
+      toast({
+        title: "Call ended",
+        description: "You can end the call.",
+        duration: 3000,
+      });
+    };
+
+    const handleCallMessageState = async (msg: any) => {
+      if (msg.type !== "transcript") return;
+      if (msg.transcriptType === "partial") {
+        setCurrentQuestion(msg["transcript"]);
+      }
+    };
+
+    const handleAiSpeechStart = async () => {
+      setIsAiSpeaking(true);
+    };
+    const handleAiSpeechEnd = async () => {
+      setIsAiSpeaking(false);
+    };
+    const handleCallError = async (error: any) => {
+      setIsRecording(false);
+      setIsAiSpeaking(false);
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: `${error.message}. Please check your internet connection and try again later.`,
+        duration: 3000,
+        variant: "destructive",
+      });
+    };
+
+    // vapi.on("")
+    // Handle call ui state
+    vapi.on("error", (error) => handleCallError(error));
+    vapi.on("speech-start", handleAiSpeechStart);
+    vapi.on("speech-end", handleAiSpeechEnd);
+    vapi.on("message", (msg) => {
+      console.log(msg);
+      handleCallMessageState(msg);
+    });
+    vapi.on("call-end", handleCallEndState);
+    vapi.on("call-start", handleCallStartState);
+
+    // The app sdk calls
+    return () => {
+      vapi.on("error", (error) => handleCallError(error));
+      vapi.off("speech-start", handleAiSpeechStart);
+      vapi.off("speech-end", handleAiSpeechEnd);
+      vapi.off("message", (msg) => {
+        handleCallMessageState(msg);
+      });
+      vapi.off("call-end", handleCallEndState);
+      vapi.off("call-start", handleCallStartState);
+    };
+  }, [isRecording, vapi]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 border-b">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen flex flex-col bg-gray-950 text-white">
+      {/* Header */}
+      <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-gray-400 hover:text-white"
+              >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                <span className="text-indigo-600 dark:text-indigo-300 font-bold">ES</span>
-              </div>
-              <div>
-                <h1 className="font-bold">Spanish Practice</h1>
-                <div className="flex items-center gap-1">
-                  <Zap className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Intermediate</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
+            <Logo />
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-6 overflow-hidden flex flex-col">
-        <Card className="flex-1 overflow-hidden flex flex-col gradient-border">
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[80%] p-3 rounded-2xl ${
-                      message.role === "user"
-                        ? "bg-indigo-100 dark:bg-indigo-900/50 rounded-tr-sm"
-                        : "bg-white dark:bg-gray-800 rounded-tl-sm"
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-5xl">
+        {/* Interview Title */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white">
+            <Globe className="h-5 w-5" />
+          </div>
+          <h1 className="text-xl font-semibold text-white">
+            Language Lessons Practice
+          </h1>
+        </div>
 
-                    {message.translation && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{message.translation}</p>
-                    )}
-
-                    {message.feedback && (
-                      <div className="flex items-center gap-1 mt-1">
-                        {message.feedback.correct ? (
-                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                            <span className="text-xs">{message.feedback.message}</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                            <span className="text-xs">{message.feedback.message}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {message.role === "assistant" && (
-                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full ml-auto block mt-1">
-                        <VolumeUp className="h-3 w-3" />
-                      </Button>
-                    )}
+        {/* Participants Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* AI Tutor Card */}
+          <div className="rounded-xl overflow-hidden border border-gray-800 bg-gray-900/50 backdrop-blur-sm">
+            <div className="p-8 flex flex-col items-center justify-center">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full bg-indigo-900/30 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full bg-indigo-800/50 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-indigo-700/70 flex items-center justify-center">
+                      <BotIcon className="h-8 w-8 text-indigo-200" />
+                    </div>
                   </div>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
+                {isAiSpeaking && (
+                  <div className="absolute -right-2 bottom-0 w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center animate-pulse">
+                    <Mic className="h-5 w-5 text-white" />
+                  </div>
+                )}
+              </div>
+              <h2 className="mt-6 text-xl font-semibold text-white">
+                AI Tutor
+              </h2>
+              <p className="text-gray-400 text-sm">Conversation Partner</p>
             </div>
           </div>
 
-          <div className="p-4 border-t">
-            <div className="relative">
-              <textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type in Spanish or tap the mic to speak..."
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 py-3 px-4 pr-24 bg-transparent resize-none"
-                rows={2}
-              />
-              <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                <Button
-                  variant={isRecording ? "destructive" : "default"}
-                  size="icon"
-                  className={`rounded-full ${isRecording ? "" : "gradient-bg"}`}
-                  onClick={toggleRecording}
-                >
-                  {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={handleSend}
-                  disabled={!inputValue.trim()}
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-
-            {isRecording && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <div className="voice-wave">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
+          {/* User Card */}
+          <div className="rounded-xl overflow-hidden border border-gray-800 bg-gray-900/50 backdrop-blur-sm hidden sm:block">
+            <div className="p-8 flex flex-col items-center justify-center">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700">
+                  <img
+                    src={
+                      (session?.user.image as string) ||
+                      "/placeholder.svg?height=128&width=128"
+                    }
+                    alt="User"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <span>Listening... Speak in Spanish</span>
+                {!isAiSpeaking && !isLoading && isRecording && (
+                  <div className="absolute -right-2 bottom-0 w-10 h-10 rounded-full bg-red-500 flex items-center justify-center animate-pulse">
+                    <Mic className="h-5 w-5 text-white" />
+                  </div>
+                )}
               </div>
-            )}
+              <h2 className="mt-6 text-xl font-semibold text-white">
+                {session?.user.name}
+              </h2>
+              <p className="text-gray-400 text-sm">Language Learner</p>
+            </div>
           </div>
-        </Card>
+        </div>
+
+        {/* Current Question/Prompt */}
+        <div className="rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-4 mb-8">
+          <div className="text-center py-2">
+            <p className="text-lg text-white">{currentQuestion}</p>
+          </div>
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex justify-center gap-4">
+          {isLoading ? (
+            <Button
+              size="lg"
+              variant={"outline"}
+              className={`rounded-full px-8 flex items-center`}
+            >
+              <span className="gradient-text text-lg animate-in">Loading</span>
+              <span className="animate-pulse delay-500 font-bold gradient-text text-[10px]">
+                ⚫
+              </span>
+              <span className="animate-pulse delay-1000 font-bold gradient-text text-[10px]">
+                ⚫
+              </span>
+              <span className="animate-pulse delay-[1500] font-bold gradient-text text-[10px]">
+                ⚫
+              </span>
+            </Button>
+          ) : !isRecording && !isLoading ? (
+            <Button
+              onClick={handleStartSession}
+              size="lg"
+              className={`rounded-full px-8 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white
+            }`}
+            >
+              Start Lesson
+              <Mic className="ml-2 h-5 w-5" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleStopSession}
+              size="lg"
+              className={`rounded-full px-8 bg-red-500 hover:bg-red-600 text-white
+               `}
+            >
+              Stop
+              <Mic className="ml-2 h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </main>
     </div>
-  )
+  );
 }

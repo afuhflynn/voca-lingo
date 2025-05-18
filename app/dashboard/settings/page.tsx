@@ -1,116 +1,234 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useSession } from "next-auth/react";
+import { privateAxios } from "@/lib/axios.config";
+import { useState } from "react";
+import { User } from "@prisma/client";
+import { toast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
+  const user = session?.user;
+  const [isUpdatingDetails, setIsUpdatingDetails] = useState(false);
+
+  const [formData, setFormData] = useState({
+    email: user?.email || "",
+    name: user?.name || "",
+    username: user?.username || "",
+    bio: user?.bio || "",
+  });
+
+  // call endpoint to update user data
+  const handleUpdateUserDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingDetails(true);
+    try {
+      const res = await privateAxios.put<{ user: User; message: string }>(
+        "/api/user/update-details",
+        formData
+      );
+      toast({
+        title: "Success updating details",
+        description: res.data.message,
+      });
+    } catch (error: Error | any) {
+      console.error("Error updating user details:", error);
+      if (error.response.data.message) {
+        toast({
+          title: "Error updating details",
+          description: error.response.data.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error updating details",
+          description: "An unexpected error occurred. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsUpdatingDetails(false);
+    }
+  };
+
+  const handleUpdateForm = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your app settings and preferences</p>
-      </div>
-
-      <div className="grid gap-6">
-        <Card className="relative overflow-hidden border-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 dark:from-purple-500/10 dark:via-pink-500/10 dark:to-blue-500/10"></div>
-
+    <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 py-6">
+      <div className="container mx-auto w-full sm:px-36 flex flex-col gap-8">
+        <Card className="gradient-border">
           <CardHeader>
-            <CardTitle>General Settings</CardTitle>
-            <CardDescription>Configure general application settings</CardDescription>
+            <CardTitle>Personal Information</CardTitle>
+            <CardDescription>
+              Update your personal details and profile information
+            </CardDescription>
           </CardHeader>
-
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-save">Auto-save recordings</Label>
-                <p className="text-sm text-muted-foreground">Automatically save recordings when stopped</p>
+            <form onSubmit={handleUpdateUserDetails}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+
+                  <Input
+                    id="fullName"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      handleUpdateForm(e.target.name, e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={(e) =>
+                      handleUpdateForm(e.target.name, e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      handleUpdateForm(e.target.name, e.target.value)
+                    }
+                  />
+                </div>
               </div>
-              <Switch id="auto-save" defaultChecked />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-transcribe">Auto-transcribe</Label>
-                <p className="text-sm text-muted-foreground">Automatically transcribe recordings when completed</p>
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Tell us about yourself"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={(e) =>
+                    handleUpdateForm(e.target.name, e.target.value)
+                  }
+                />
               </div>
-              <Switch id="auto-transcribe" defaultChecked />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="language">Transcription Language</Label>
-              <Select defaultValue="en-US">
-                <SelectTrigger id="language">
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en-US">English (US)</SelectItem>
-                  <SelectItem value="en-GB">English (UK)</SelectItem>
-                  <SelectItem value="es-ES">Spanish</SelectItem>
-                  <SelectItem value="fr-FR">French</SelectItem>
-                  <SelectItem value="de-DE">German</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex justify-end pt-4">
+                <Button className="gradient-bg" disabled={isUpdatingDetails}>
+                  {isUpdatingDetails ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        <Card className="gradient-border">
+          <CardHeader>
+            <CardTitle>Account Management</CardTitle>
+            <CardDescription>
+              Manage your account status and data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Download Your Data</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Get a copy of all your personal data and learning history
+                  </div>
+                </div>
+                <Button variant="outline" disabled>
+                  Download
+                </Button>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quality">Recording Quality</Label>
-              <Select defaultValue="high">
-                <SelectTrigger id="quality">
-                  <SelectValue placeholder="Select quality" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low (8kHz)</SelectItem>
-                  <SelectItem value="medium">Medium (16kHz)</SelectItem>
-                  <SelectItem value="high">High (24kHz)</SelectItem>
-                  <SelectItem value="ultra">Ultra (48kHz)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="pt-4 border-t">
+                <Dialog>
+                  <DialogTrigger asChild disabled>
+                    <Button
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Account
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Delete Account</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to delete your account? This
+                        action cannot be undone and all your data will be
+                        permanently removed.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Warning</AlertTitle>
+                        <AlertDescription>
+                          Deleting your account will erase all your progress,
+                          achievements, and learning history.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                    <div className="flex flex-col items-start py-4">
+                      <Label className="mb-2" htmlFor="email">
+                        <span>Email </span>
+                        <span className="text-xs">
+                          (Helps us ensure that the account delete is not
+                          automated.)
+                        </span>
+                      </Label>
+                      <Input
+                        // value={formData.email}
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="johana@example.com"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <DialogTrigger asChild>
+                        <Button variant="outline">Cancel</Button>
+                      </DialogTrigger>
+                      <Button variant="destructive">Delete Account</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </CardContent>
-
-          <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline">Reset</Button>
-            <Button>Save Changes</Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="relative overflow-hidden border-2">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 dark:from-purple-500/10 dark:via-pink-500/10 dark:to-blue-500/10"></div>
-
-          <CardHeader>
-            <CardTitle>Privacy Settings</CardTitle>
-            <CardDescription>Configure your privacy preferences</CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="analytics">Usage Analytics</Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow anonymous usage data collection to improve the app
-                </p>
-              </div>
-              <Switch id="analytics" defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="cloud-backup">Cloud Backup</Label>
-                <p className="text-sm text-muted-foreground">Store your recordings and transcriptions in the cloud</p>
-              </div>
-              <Switch id="cloud-backup" defaultChecked />
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline">Reset</Button>
-            <Button>Save Changes</Button>
-          </CardFooter>
         </Card>
       </div>
-    </div>
-  )
+    </main>
+  );
 }
-

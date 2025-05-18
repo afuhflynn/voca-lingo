@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Globe } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Globe } from "lucide-react";
 
 const languages = [
+  { code: "en", name: "English", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
   { code: "es", name: "Spanish", flag: "🇪🇸" },
   { code: "fr", name: "French", flag: "🇫🇷" },
   { code: "de", name: "German", flag: "🇩🇪" },
@@ -14,10 +20,10 @@ const languages = [
   { code: "ko", name: "Korean", flag: "🇰🇷" },
   { code: "zh", name: "Chinese", flag: "🇨🇳" },
   { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-]
+];
 
 export function LanguageSelector() {
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0])
+  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
 
   return (
     <DropdownMenu>
@@ -41,5 +47,5 @@ export function LanguageSelector() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

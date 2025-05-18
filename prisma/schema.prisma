@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-    id                String    @id @default(auto()) @map("_id") @db.ObjectId
+    id                String            @id @default(auto()) @map("_id") @db.ObjectId
     name              String?
-    email             String?   @unique
+    username          String?
+    email             String?           @unique
     emailVerified     DateTime?
     image             String?
-    preferredLanguage String?   @default("english")
-    xpPoints          Int       @default(0)
-    learningLevel     String?   @default("beginner") // beginner, intermediate, advanced
-    streak            Int       @default(0)
-    lastActiveDate    DateTime? 
+    preferredLanguage String?           @default("english")
+    xpPoints          Int               @default(0)
+    learningLevel     String?           @default("beginner") // beginner, intermediate, advanced
+    streak            Int               @default(0)
+    lastActiveDate    DateTime?
+    bio               String
     // Relations
-    accounts          Account[] @relation("UserAccounts")
-    sessions          Session[] @relation("UserSessions")
+    accounts          Account[]         @relation("UserAccounts")
+    sessions          Session[]         @relation("UserSessions")
     progress          UserProgress[]
     voicePractices    VoicePractice[]
     vocabularyLists   VocabularyList[]
@@ -74,137 +76,137 @@ model VerificationToken {
 }
 
 model Language {
-    id          String        @id @default(auto()) @map("_id") @db.ObjectId
-    name        String        @unique
-    code        String        @unique // ISO code (e.g., en, es, fr)
-    isActive    Boolean       @default(true)
-    
+    id       String  @id @default(auto()) @map("_id") @db.ObjectId
+    name     String  @unique
+    code     String  @unique // ISO code (e.g., en, es, fr)
+    isActive Boolean @default(true)
+
     // Relations
     vocabularies Vocabulary[]
-    
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @updatedAt
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("languages")
 }
 
 model Vocabulary {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    word        String
-    translation String
+    id           String  @id @default(auto()) @map("_id") @db.ObjectId
+    word         String
+    translation  String
     partOfSpeech String?
-    example     String?
-    audioUrl    String?
-    difficulty  String    @default("beginner") // beginner, intermediate, advanced
-    
+    example      String?
+    audioUrl     String?
+    difficulty   String  @default("beginner") // beginner, intermediate, advanced
+
     // Relations
-    languageId  String    @db.ObjectId
-    language    Language  @relation(fields: [languageId], references: [id], onDelete: Cascade)
-    lists       VocabularyListItem[]
-    
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    languageId String               @db.ObjectId
+    language   Language             @relation(fields: [languageId], references: [id], onDelete: Cascade)
+    lists      VocabularyListItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("vocabularies")
 }
 
 model VocabularyList {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    id          String  @id @default(auto()) @map("_id") @db.ObjectId
     name        String
     description String?
-    isPublic    Boolean   @default(false)
-    category    String?   // e.g., travel, food, business
-    
+    isPublic    Boolean @default(false)
+    category    String? // e.g., travel, food, business
+
     // Relations
-    userId      String    @db.ObjectId
-    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    items       VocabularyListItem[]
-    
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    userId String               @db.ObjectId
+    user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+    items  VocabularyListItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("vocabulary_lists")
 }
 
 model VocabularyListItem {
-    id              String        @id @default(auto()) @map("_id") @db.ObjectId
-    learned         Boolean       @default(false)
-    lastPracticed   DateTime?
-    timesReviewed   Int           @default(0)
-    
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    learned       Boolean   @default(false)
+    lastPracticed DateTime?
+    timesReviewed Int       @default(0)
+
     // Relations
-    vocabularyId    String        @db.ObjectId
-    vocabulary      Vocabulary    @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
-    listId          String        @db.ObjectId
-    list            VocabularyList @relation(fields: [listId], references: [id], onDelete: Cascade)
-    
-    createdAt       DateTime      @default(now())
-    updatedAt       DateTime      @updatedAt
+    vocabularyId String         @db.ObjectId
+    vocabulary   Vocabulary     @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+    listId       String         @db.ObjectId
+    list         VocabularyList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("vocabulary_list_items")
 }
 
 model VoicePractice {
-    id              String    @id @default(auto()) @map("_id") @db.ObjectId
-    audioUrl        String?
-    transcription   String?
-    aiFeedback      String?
-    pronunciationScore  Float?
-    type            String    // vocabulary, sentence, conversation
-    
+    id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+    audioUrl           String?
+    transcription      String?
+    aiFeedback         String?
+    pronunciationScore Float?
+    type               String // vocabulary, sentence, conversation
+
     // Relations
-    userId          String    @db.ObjectId
-    user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    
-    createdAt       DateTime  @default(now())
-    updatedAt       DateTime  @updatedAt
+    userId String @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("voice_practices")
 }
 
 model UserProgress {
-    id              String    @id @default(auto()) @map("_id") @db.ObjectId
-    language        String
-    vocabularyLearned Int     @default(0)
-    lessonCompleted  Int      @default(0)
-    currentLevel    String    @default("beginner")
-    
+    id                String @id @default(auto()) @map("_id") @db.ObjectId
+    language          String
+    vocabularyLearned Int    @default(0)
+    lessonCompleted   Int    @default(0)
+    currentLevel      String @default("beginner")
+
     // Relations
-    userId          String    @db.ObjectId
-    user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    
-    createdAt       DateTime  @default(now())
-    updatedAt       DateTime  @updatedAt
+    userId String @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("user_progress")
 }
 
 model Achievement {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    name        String    @unique
+    id          String  @id @default(auto()) @map("_id") @db.ObjectId
+    name        String  @unique
     description String
-    xpReward    Int       @default(10)
+    xpReward    Int     @default(10)
     badgeUrl    String?
-    
+
     // Relations
-    users       UserAchievement[]
-    
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    users UserAchievement[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     @@map("achievements")
 }
 
 model UserAchievement {
-    id              String      @id @default(auto()) @map("_id") @db.ObjectId
-    achievedAt      DateTime    @default(now())
-    
+    id         String   @id @default(auto()) @map("_id") @db.ObjectId
+    achievedAt DateTime @default(now())
+
     // Relations
-    userId          String      @db.ObjectId
-    user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    achievementId   String      @db.ObjectId
-    achievement     Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-    
+    userId        String      @db.ObjectId
+    user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    achievementId String      @db.ObjectId
+    achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
     @@unique([userId, achievementId])
     @@map("user_achievements")
 }
