@@ -3,6 +3,7 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { CustomPrismaAdapter } from "./custom-prisma-adapter";
 import { prisma } from "./prisma";
+import { User } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET!,
@@ -57,8 +58,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       try {
         if (user) {
           token.id = user.id?.toString() as string;
-          token.username = (user as any).username;
-          token.bio = (user as any).bio;
+          token.username = (user as User).username as string;
+          token.bio = (user as User).bio;
           token.signedInAt = new Date().toISOString();
         }
         return token;
@@ -100,6 +101,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/sign-in",
-    error: "/error",
   },
 });

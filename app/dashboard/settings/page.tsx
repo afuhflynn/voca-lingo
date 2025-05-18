@@ -53,7 +53,8 @@ export default function SettingsPage() {
         title: "Success updating details",
         description: res.data.message,
       });
-    } catch (error: Error | any) {
+      // @ts-expect-error: error is of type 'unknown', casting to 'any' to access properties
+    } catch (error: Error) {
       console.error("Error updating user details:", error);
       if (error.response.data.message) {
         toast({

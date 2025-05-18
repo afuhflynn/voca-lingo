@@ -115,6 +115,7 @@ export async function PUT(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       {
         success: false,

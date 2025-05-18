@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, ChevronLeft, Globe, BotIcon } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { loadVapiEnvs } from "@/lib/vapi";
 import { config } from "dotenv";
 import { toast } from "@/hooks/use-toast";
 import Vapi from "@vapi-ai/web";
+import Image from "next/image";
 
 // load envs
 config();
@@ -23,7 +24,9 @@ export default function ChatPage() {
 
   // Vapi api and assistant keys set up
   const vapiKeys = loadVapiEnvs();
-  const vapi = new Vapi(vapiKeys.apiKey as string);
+  const vapi = useMemo(() => {
+    return new Vapi(vapiKeys.apiKey as string);
+  }, [vapiKeys.apiKey]);
 
   const handleStartSession = async () => {
     setIsRecording((prev) => !prev);
@@ -59,7 +62,11 @@ export default function ChatPage() {
       });
     };
 
-    const handleCallMessageState = async (msg: any) => {
+    const handleCallMessageState = async (msg: {
+      transcript: string;
+      type: string;
+      transcriptType: string;
+    }) => {
       if (msg.type !== "transcript") return;
       if (msg.transcriptType === "partial") {
         setCurrentQuestion(msg["transcript"]);
@@ -72,7 +79,7 @@ export default function ChatPage() {
     const handleAiSpeechEnd = async () => {
       setIsAiSpeaking(false);
     };
-    const handleCallError = async (error: any) => {
+    const handleCallError = async (error: { message: string }) => {
       setIsRecording(false);
       setIsAiSpeaking(false);
       setIsLoading(false);
@@ -171,12 +178,14 @@ export default function ChatPage() {
             <div className="p-8 flex flex-col items-center justify-center">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700">
-                  <img
+                  <Image
                     src={
                       (session?.user.image as string) ||
                       "/placeholder.svg?height=128&width=128"
                     }
                     alt="User"
+                    width={300}
+                    height={300}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -216,7 +225,7 @@ export default function ChatPage() {
               <span className="animate-pulse delay-1000 font-bold gradient-text text-[10px]">
                 ⚫
               </span>
-              <span className="animate-pulse delay-[1500] font-bold gradient-text text-[10px]">
+              <span className="animate-pulse delay-&lsqb;1500&rsqb; font-bold gradient-text text-[10px]">
                 ⚫
               </span>
             </Button>

@@ -18,13 +18,14 @@ export async function middleware(req: NextRequest) {
   // If the user is not authenticated and trying to access a protected route, redirect to login
   if (
     !isAuthenticated &&
-    (pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/practice") ||
-      pathname.startsWith("/chat"))
+    (pathname.startsWith("/dashboard") || pathname.startsWith("/chat"))
   ) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
+  if ((isAuthenticated || !isAuthenticated) && pathname === "/practice") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
   // If the user is authenticated and trying to access the login page, redirect to dashboard
   if (isAuthenticated && pathname === "/sign-in") {
     return NextResponse.redirect(new URL("/dashboard", req.url));

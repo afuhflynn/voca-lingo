@@ -1,7 +1,4 @@
 import Navbar from "@/components/navbar";
-import Logo from "@/components/ui/logo";
-import { Github, GithubIcon, Mail } from "lucide-react";
-import Link from "next/link";
 
 export default function RootLayout({
   children,

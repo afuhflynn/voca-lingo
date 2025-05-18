@@ -1,16 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/mode-toggle";
-import {
-  Mic,
-  Globe,
-  Award,
-  Zap,
-  MessageSquare,
-  BarChart,
-  CheckCircle,
-  ArrowRight,
-} from "lucide-react";
+import { Mic, Zap, CheckCircle, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   return (
