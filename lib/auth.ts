@@ -6,13 +6,13 @@ import { prisma } from "./prisma";
 import { User } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET!,
+  secret: process.env.NEXTAUTH_SECRET!,
   adapter: CustomPrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
     GitHub({
-      clientId: process.env.AUTH_GITHUB_CLIENT_ID!,
-      clientSecret: process.env.AUTH_GITHUB_CLIENT_SECRET!,
+      clientId: process.env.NEXT_PUBLIC_AUTH_GITHUB_CLIENT_ID!,
+      clientSecret: process.env.NEXT_PUBLIC_AUTH_GITHUB_CLIENT_SECRET!,
       profile(profile) {
         return {
           id: profile.id.toString(),
@@ -25,8 +25,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
     Google({
-      clientId: process.env.AUTH_GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.NEXT_PUBLIC_AUTH_GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.NEXT_PUBLIC_AUTH_GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
           prompt: "consent",

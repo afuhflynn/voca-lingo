@@ -44,7 +44,7 @@ export default function SignInPage() {
               type="submit"
               size={"lg"}
               className="w-full flex items-center justify-center gap-2 border border-input"
-              disabled
+              // disabled
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path
