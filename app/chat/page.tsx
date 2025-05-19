@@ -180,12 +180,12 @@ export default function ChatPage() {
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700">
                   <Image
                     src={
-                      (session?.user.image as string) ||
+                      session?.user.image ||
                       "/placeholder.svg?height=128&width=128"
                     }
                     alt="User"
-                    width={300}
-                    height={300}
+                    width={800}
+                    height={800}
                     className="w-full h-full object-cover"
                   />
                 </div>
