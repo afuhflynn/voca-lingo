@@ -43,6 +43,7 @@ export default function SignInPage() {
               variant="outline"
               type="submit"
               size={"lg"}
+              disabled
               className="w-full flex items-center justify-center gap-2 border border-input"
               // disabled
             >
