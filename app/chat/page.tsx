@@ -179,10 +179,7 @@ export default function ChatPage() {
               <div className="relative">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700">
                   <Image
-                    src={
-                      session?.user.image ||
-                      "/placeholder.svg?height=128&width=128"
-                    }
+                    src={(session?.user.image as string) || ""}
                     alt="User"
                     width={800}
                     height={800}

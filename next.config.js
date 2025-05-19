@@ -1,20 +1,25 @@
-/**
- * @type {import('next').NextConfig}
- */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["uploadthing.com", "https://dashboard.vapi.ai"],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "uploadthing.com",
-        pathname: "**",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "dashboard.vapi.ai",
-        pathname: "**",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        port: "",
+        pathname: "/**", // allow avatar URLs like /u/138466374?v=4
       },
     ],
   },
