@@ -1,3 +1,5 @@
+"use client";
+
 import { Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,11 +9,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { githubSignIn } from "@/lib/actions/github-signin";
-import { googleSignIn } from "@/lib/actions/google-signin";
 import Logo from "@/components/ui/logo";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { googleSignIn } from "@/lib/actions/google-signin";
+import { githubSignIn } from "@/lib/actions/github-signin";
 
 export default function SignInPage() {
+  const router = useRouter();
+  // const { user, setUser } = useUserStore();
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSignIn(provider: "github" | "google") {
+    setIsLoading(true);
+
+    try {
+      if (provider === "github") {
+        await githubSignIn();
+      } else {
+        await googleSignIn();
+      }
+
+      // Redirect to home page
+      // setUser(null);
+      // router.push("/");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
   return (
     <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -27,23 +54,24 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form action={githubSignIn}>
+          <div>
             <Button
               variant="outline"
-              type="submit"
+              onClick={() => handleSignIn("github")}
+              disabled={isLoading}
               size={"lg"}
               className="w-full flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 hover:text-white"
             >
               <Github className="h-4 w-4" />
               Sign in with GitHub
             </Button>
-          </form>
-          <form action={googleSignIn}>
+          </div>
+          <div>
             <Button
               variant="outline"
-              type="submit"
+              onClick={() => handleSignIn("google")}
+              disabled={isLoading}
               size={"lg"}
-              disabled
               className="w-full flex items-center justify-center gap-2 border border-input"
               // disabled
             >
@@ -68,7 +96,7 @@ export default function SignInPage() {
               </svg>
               Sign in with Google
             </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>

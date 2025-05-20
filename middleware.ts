@@ -1,10 +1,11 @@
-import NextAuth from "next-auth";
+import { auth } from "@/lib/auth"; // path to your Better Auth server instance
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import authConfig from "./lib/auth.config";
 
 export async function middleware(req: NextRequest) {
-  const { auth } = NextAuth(authConfig);
-  const session = await auth();
+  const session = await auth.api.getSession({
+    headers: await headers(), // you need to pass the headers object.
+  });
   const { pathname } = req.nextUrl;
 
   // Check if the user is authenticated

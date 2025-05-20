@@ -1,105 +1,44 @@
-import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
-import { CustomPrismaAdapter } from "./custom-prisma-adapter";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+// If your Prisma file is located elsewhere, you can change the path
 import { prisma } from "./prisma";
-import { User } from "@prisma/client";
+import { THIRTY_DAYS } from "@/constants/constants";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET!,
-  adapter: CustomPrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  providers: [
-    GitHub({
-      clientId: process.env.NEXT_PUBLIC_AUTH_GITHUB_CLIENT_ID!,
-      clientSecret: process.env.NEXT_PUBLIC_AUTH_GITHUB_CLIENT_SECRET!,
-      profile(profile) {
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "mongodb", // or "mysql", "postgresql", ...etc
+  }),
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+      mapProfileToUser: (profile) => {
         return {
-          id: profile.id.toString(),
-          name: profile.name || profile.login,
-          email: profile.email || null,
-          image: profile.avatar_url || null,
-          username: profile.login as string,
-          bio: profile.bio as string | null,
+          name: profile.name,
+          username: profile.login,
+          bio: profile.bio,
+          emailVerified: true,
+          provider: "github",
+          providerAccountId: profile.id,
+          image: profile.avatar_url,
         };
       },
-    }),
-    Google({
-      clientId: process.env.NEXT_PUBLIC_AUTH_GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.NEXT_PUBLIC_AUTH_GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-        httpOptions: {
-          timeout: 60000, // 60 seconds
-        },
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      mapProfileToUser: (profile) => {
+        return {
+          name: profile.name,
+          username: profile.given_name + profile.family_name,
+          emailVerified: true,
+          bio: "",
+          provider: "github",
+          providerAccountId: profile.aud,
+          image: profile.picture,
+        };
       },
-    }),
-  ],
-  callbacks: {
-    async session({ session, token }) {
-      try {
-        if (token.sub && session.user) {
-          session.user.id = token.id as string;
-          session.user.username = token.username as string;
-          session.user.bio = token.bio as string | null;
-          session.user.signedInAt = token.signedInAt as string;
-        }
-        return session;
-      } catch (error) {
-        console.error("Error in session callback:", error);
-        throw error;
-      }
-    },
-    async jwt({ token, user }) {
-      try {
-        if (user) {
-          token.id = user.id?.toString() as string;
-          token.username = (user as User).username as string;
-          token.bio = (user as User).bio;
-          token.signedInAt = new Date().toISOString();
-        }
-        return token;
-      } catch (error) {
-        console.error("Error in jwt callback:", error);
-        throw error;
-      }
-    },
-    async redirect({ url, baseUrl }) {
-      try {
-        if (url.startsWith("/")) {
-          return `${baseUrl}${url}`;
-        } else if (new URL(url).origin === baseUrl) {
-          return url;
-        }
-        return baseUrl;
-      } catch (error) {
-        console.error("Error in redirect callback:", error);
-        throw error;
-      }
-    },
-    async signIn({ account, profile }) {
-      try {
-        if (account?.provider === "google") {
-          if (
-            profile?.email_verified &&
-            profile?.email?.endsWith("@gmail.com")
-          ) {
-            return true;
-          }
-          return false;
-        }
-        return true; // Do different verification for other providers that don't have `email_verified`
-      } catch (error) {
-        console.error("Error in signIn callback:", error);
-        return false; // Explicitly return false on error
-      }
     },
   },
-  pages: {
-    signIn: "/sign-in",
-  },
+  secret: process.env.BETTER_AUTH_SECRET,
 });

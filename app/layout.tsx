@@ -2,7 +2,6 @@ import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -25,7 +24,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>{children}</SessionProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

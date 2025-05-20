@@ -1,212 +1,223 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mongodb"
-    url      = env("NEXT_PUBLIC_DATABASE_URL")
+  provider = "postgres"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id                String            @id @default(auto()) @map("_id") @db.ObjectId
-    name              String?
-    username          String?
-    email             String?           @unique
-    emailVerified     DateTime?
-    image             String?
-    preferredLanguage String?           @default("english")
-    xpPoints          Int               @default(0)
-    learningLevel     String?           @default("beginner") // beginner, intermediate, advanced
-    streak            Int               @default(0)
-    lastActiveDate    DateTime?
-    bio               String
-    // Relations
-    accounts          Account[]         @relation("UserAccounts")
-    sessions          Session[]         @relation("UserSessions")
-    progress          UserProgress[]
-    voicePractices    VoicePractice[]
-    vocabularyLists   VocabularyList[]
-    achievements      UserAchievement[]
+  id                String            @id
+  name              String
+  email             String
+  emailVerified     Boolean
+  image             String?
+  preferredLanguage String?           @default("english")
+  xpPoints          Int               @default(0)
+  learningLevel     String?           @default("beginner") // beginner, intermediate, advanced
+  streak            Int               @default(0)
+  lastActiveDate    DateTime?
+  bio               String?
+  progress          UserProgress[]
+  voicePractices    VoicePractice[]
+  vocabularyLists   VocabularyList[]
+  achievements      UserAchievement[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime
+  updatedAt DateTime
+  sessions  Session[]
+  accounts  Account[]
 
-    @@map("users")
-}
-
-model Account {
-    id                String  @id @default(auto()) @map("_id") @db.ObjectId
-    userId            String  @db.ObjectId
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String? @map("refresh_token")
-    access_token      String? @map("access_token")
-    expires_at        Int?    @map("expires_at")
-    token_type        String? @map("token_type")
-    scope             String?
-    id_token          String? @map("id_token")
-    session_state     String? @map("session_state")
-
-    user User @relation("UserAccounts", fields: [userId], references: [id], onDelete: Cascade)
-
-    @@unique([provider, providerAccountId])
-    @@map("accounts")
+  @@unique([email])
+  @@map("user")
 }
 
 model Session {
-    id           String   @id @default(auto()) @map("_id") @db.ObjectId
-    sessionToken String   @unique
-    userId       String   @db.ObjectId
-    expires      DateTime
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    user User @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
-
-    @@map("sessions")
+  @@unique([token])
+  @@map("session")
 }
 
-model VerificationToken {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    identifier String
-    token      String   @unique
-    expires    DateTime
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
 
-    @@unique([identifier, token])
-    @@map("verification_tokens")
+  refresh_token String? @map("refresh_token")
+  access_token  String? @map("access_token")
+  expires_at    Int?    @map("expires_at")
+  token_type    String? @map("token_type")
+  id_token      String? @map("id_token")
+  session_state String? @map("session_state")
+
+  createdAt DateTime
+  updatedAt DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }
 
 model Language {
-    id       String  @id @default(auto()) @map("_id") @db.ObjectId
-    name     String  @unique
-    code     String  @unique // ISO code (e.g., en, es, fr)
-    isActive Boolean @default(true)
+  id       String  @id
+  name     String  @unique
+  code     String  @unique // ISO code (e.g., en, es, fr)
+  isActive Boolean @default(true)
 
-    // Relations
-    vocabularies Vocabulary[]
+  // Relations
+  vocabularies Vocabulary[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("languages")
+  @@map("languages")
 }
 
 model Vocabulary {
-    id           String  @id @default(auto()) @map("_id") @db.ObjectId
-    word         String
-    translation  String
-    partOfSpeech String?
-    example      String?
-    audioUrl     String?
-    difficulty   String  @default("beginner") // beginner, intermediate, advanced
+  id           String  @id
+  word         String
+  translation  String
+  partOfSpeech String?
+  example      String?
+  audioUrl     String?
+  difficulty   String  @default("beginner") // beginner, intermediate, advanced
 
-    // Relations
-    languageId String               @db.ObjectId
-    language   Language             @relation(fields: [languageId], references: [id], onDelete: Cascade)
-    lists      VocabularyListItem[]
+  // Relations
+  languageId String
+  language   Language             @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  lists      VocabularyListItem[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("vocabularies")
+  @@map("vocabularies")
 }
 
 model VocabularyList {
-    id          String  @id @default(auto()) @map("_id") @db.ObjectId
-    name        String
-    description String?
-    isPublic    Boolean @default(false)
-    category    String? // e.g., travel, food, business
+  id          String  @id
+  name        String
+  description String?
+  isPublic    Boolean @default(false)
+  category    String? // e.g., travel, food, business
 
-    // Relations
-    userId String               @db.ObjectId
-    user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-    items  VocabularyListItem[]
+  // Relations
+  userId String
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items  VocabularyListItem[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("vocabulary_lists")
+  @@map("vocabulary_lists")
 }
 
 model VocabularyListItem {
-    id            String    @id @default(auto()) @map("_id") @db.ObjectId
-    learned       Boolean   @default(false)
-    lastPracticed DateTime?
-    timesReviewed Int       @default(0)
+  id            String    @id
+  learned       Boolean   @default(false)
+  lastPracticed DateTime?
+  timesReviewed Int       @default(0)
 
-    // Relations
-    vocabularyId String         @db.ObjectId
-    vocabulary   Vocabulary     @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
-    listId       String         @db.ObjectId
-    list         VocabularyList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  // Relations
+  vocabularyId String
+  vocabulary   Vocabulary     @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+  listId       String
+  list         VocabularyList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("vocabulary_list_items")
+  @@map("vocabulary_list_items")
 }
 
 model VoicePractice {
-    id                 String  @id @default(auto()) @map("_id") @db.ObjectId
-    audioUrl           String?
-    transcription      String?
-    aiFeedback         String?
-    pronunciationScore Float?
-    type               String // vocabulary, sentence, conversation
+  id                 String  @id
+  audioUrl           String?
+  transcription      String?
+  aiFeedback         String?
+  pronunciationScore Float?
+  type               String // vocabulary, sentence, conversation
 
-    // Relations
-    userId String @db.ObjectId
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("voice_practices")
+  @@map("voice_practices")
 }
 
 model UserProgress {
-    id                String @id @default(auto()) @map("_id") @db.ObjectId
-    language          String
-    vocabularyLearned Int    @default(0)
-    lessonCompleted   Int    @default(0)
-    currentLevel      String @default("beginner")
+  id                String @id
+  language          String
+  vocabularyLearned Int    @default(0)
+  lessonCompleted   Int    @default(0)
+  currentLevel      String @default("beginner")
 
-    // Relations
-    userId String @db.ObjectId
-    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("user_progress")
+  @@map("user_progress")
 }
 
 model Achievement {
-    id          String  @id @default(auto()) @map("_id") @db.ObjectId
-    name        String  @unique
-    description String
-    xpReward    Int     @default(10)
-    badgeUrl    String?
+  id          String  @id
+  name        String  @unique
+  description String
+  xpReward    Int     @default(10)
+  badgeUrl    String?
 
-    // Relations
-    users UserAchievement[]
+  // Relations
+  users UserAchievement[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("achievements")
+  @@map("achievements")
 }
 
 model UserAchievement {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    achievedAt DateTime @default(now())
+  id         String   @id
+  achievedAt DateTime @default(now())
 
-    // Relations
-    userId        String      @db.ObjectId
-    user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    achievementId String      @db.ObjectId
-    achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  // Relations
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
-    @@unique([userId, achievementId])
-    @@map("user_achievements")
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
 }

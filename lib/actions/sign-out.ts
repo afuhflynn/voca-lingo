@@ -1,8 +1,8 @@
-"use server";
+"use client";
 
 // create a github signin action
-import { signOut } from "@/lib/auth";
+import { authClient } from "../auth-client";
 
 export const signOutAction = async () => {
-  await signOut();
+  await authClient.signOut();
 };
