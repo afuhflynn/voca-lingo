@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, ChevronLeft, Globe, BotIcon } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import Logo from "@/components/ui/logo";
-import { loadVapiEnvs } from "@/lib/vapi";
+import { loadVapiEnvs, vapi } from "@/lib/vapi";
 import { config } from "dotenv";
 import { toast } from "@/hooks/use-toast";
-import Vapi from "@vapi-ai/web";
-import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // load envs
 config();
@@ -19,14 +18,11 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, isPending, error, refetch } = useSession();
 
   // Vapi api and assistant keys set up
   const vapiKeys = loadVapiEnvs();
-  const vapi = useMemo(() => {
-    return new Vapi(vapiKeys.apiKey as string);
-  }, [vapiKeys.apiKey]);
 
   const handleStartSession = async () => {
     setIsRecording((prev) => !prev);
@@ -116,6 +112,19 @@ export default function ChatPage() {
     };
   }, [isRecording, vapi]);
 
+  if (error) {
+    toast({
+      description:
+        error.message ||
+        "Error connecting to our auth server to get your session. Check your internet connection.",
+      variant: "destructive",
+    });
+  }
+
+  if (isPending) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-950 text-white">
       {/* Header */}
@@ -178,13 +187,17 @@ export default function ChatPage() {
             <div className="p-8 flex flex-col items-center justify-center">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700">
-                  <Image
-                    src={(session?.user.image as string) || ""}
-                    alt="User"
-                    width={800}
-                    height={800}
-                    className="w-full h-full object-cover"
-                  />
+                  <Avatar className="h-full w-full">
+                    <AvatarImage
+                      className="w-full h-full object-cover"
+                      src={session?.user?.image as string}
+                      alt="@user"
+                    />
+                    <AvatarFallback className="font-extrabold text-5xl">
+                      {" "}
+                      {session?.user?.name?.split(" ")[0].charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
                 {!isAiSpeaking && !isLoading && isRecording && (
                   <div className="absolute -right-2 bottom-0 w-10 h-10 rounded-full bg-red-500 flex items-center justify-center animate-pulse">

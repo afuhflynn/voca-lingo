@@ -1,13 +1,20 @@
 import { DashboardNav } from "@/components/dashboard-nav";
 import { Metadata } from "next";
-import NextAuth from "next-auth";
-import authConfig from "@/lib/auth.config";
 import { DashboardTopBar } from "@/components/dashboard-top-bar";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 // dashboard metadat
 export async function generateMetadata(): Promise<Metadata> {
-  const { auth } = NextAuth(authConfig);
-  const session = await auth();
+  let session;
+  try {
+    session = await auth.api.getSession({
+      headers: await headers(), // you need to pass the headers object.
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
   return {
     title: session?.user?.name
       ? `${session.user.name} | VocaLingo`
@@ -29,7 +36,7 @@ export default async function DashboardLayout({
       {/* Main content */}
       <div className="flex-1 flex flex-col w-full">
         <DashboardTopBar />
-        <main className=" h-full overflow-auto">{children}</main>
+        <main className=" h-full overflow-auto w-full">{children}</main>
       </div>
     </div>
   );

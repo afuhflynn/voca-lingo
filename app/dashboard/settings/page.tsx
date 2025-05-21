@@ -22,22 +22,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useSession } from "next-auth/react";
 import { privateAxios } from "@/lib/axios.config";
 import { useState } from "react";
 import { User } from "@prisma/client";
 import { toast } from "@/hooks/use-toast";
+import { useSession } from "@/lib/auth-client";
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, isPending, error } = useSession();
   const user = session?.user;
+
+  if (error) {
+    toast({
+      description:
+        error.message ||
+        "Error connecting to our auth server to get your session. Check your internet connection.",
+      variant: "destructive",
+    });
+  }
+
+  if (isPending) {
+    return null;
+  }
   const [isUpdatingDetails, setIsUpdatingDetails] = useState(false);
 
   const [formData, setFormData] = useState({
     email: user?.email || "",
     name: user?.name || "",
-    username: user?.username || "",
-    bio: user?.bio || "",
   });
 
   // call endpoint to update user data
@@ -104,18 +115,6 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={(e) =>
-                      handleUpdateForm(e.target.name, e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -128,20 +127,6 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
-              <div className="space-y-2 mt-4">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tell us about yourself"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={(e) =>
-                    handleUpdateForm(e.target.name, e.target.value)
-                  }
-                />
-              </div>
-
               <div className="flex justify-end pt-4">
                 <Button className="gradient-bg" disabled={isUpdatingDetails}>
                   {isUpdatingDetails ? "Saving..." : "Save Changes"}

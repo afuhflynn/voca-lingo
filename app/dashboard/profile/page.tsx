@@ -3,13 +3,27 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Edit, Camera } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { toast } from "@/hooks/use-toast";
+import { useSession } from "@/lib/auth-client";
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, isPending, error } = useSession();
   const user = session?.user;
+
+  if (error) {
+    toast({
+      description:
+        error.message ||
+        "Error connecting to our auth server to get your session. Check your internet connection.",
+      variant: "destructive",
+    });
+  }
+
+  if (isPending) {
+    return null;
+  }
 
   return (
     <main className="flex-1 p-4 px-2 md:p-6 overflow-auto">
@@ -46,9 +60,6 @@ export default function ProfilePage() {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                       <h2 className="text-2xl font-bold">{user?.name}</h2>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        @{user?.username}
-                      </p>
                     </div>
                     <Link href={"/dashboard/settings"}>
                       <Button

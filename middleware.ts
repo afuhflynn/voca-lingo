@@ -1,15 +1,12 @@
-import { auth } from "@/lib/auth"; // path to your Better Auth server instance
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+  const cookies = req.cookies;
+  const authCookie = cookies.get("better-auth.session_token");
   const { pathname } = req.nextUrl;
 
   // Check if the user is authenticated
-  const isAuthenticated = session?.user !== undefined;
+  const isAuthenticated = authCookie !== undefined;
 
   // Redirect authenticated users to the dashboard if they try to access the sign-up page
   if (isAuthenticated && pathname === "/") {

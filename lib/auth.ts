@@ -2,11 +2,11 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 // If your Prisma file is located elsewhere, you can change the path
 import { prisma } from "./prisma";
-import { THIRTY_DAYS } from "@/constants/constants";
+import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "mongodb", // or "mysql", "postgresql", ...etc
+    provider: "postgresql", // or "mysql", "postgresql", ...etc
   }),
   socialProviders: {
     github: {
@@ -25,6 +25,9 @@ export const auth = betterAuth({
       },
     },
     google: {
+      prompt: "select_account",
+      accessType: "offline",
+      responseType: "code",
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       mapProfileToUser: (profile) => {
@@ -41,4 +44,5 @@ export const auth = betterAuth({
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,
+  plugins: [nextCookies()],
 });

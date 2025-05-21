@@ -1,4 +1,4 @@
-"use server";
+"use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import authConfig from "@/lib/auth.config";
 import { LogOut } from "lucide-react";
-import NextAuth from "next-auth";
 import Link from "next/link";
+import { useSession } from "@/lib/auth-client";
 
-export async function UserNav() {
-  const { auth } = NextAuth(authConfig);
-  const session = await auth();
+export function UserNav() {
+  const { data: session, isPending, error, refetch } = useSession();
 
   return (
     <DropdownMenu>

@@ -1,14 +1,15 @@
-import authConfig from "@/lib/auth.config";
-import NextAuth from "next-auth";
+"use client";
+
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Mic } from "lucide-react";
 import { UserNav } from "./user-nav";
 import { ModeToggle } from "./mode-toggle";
+import { useSession } from "@/lib/auth-client";
 
-export const DashboardTopBar = async () => {
-  const { auth } = NextAuth(authConfig);
-  const session = await auth();
+export const DashboardTopBar = () => {
+  const { data: session, isPending, error, refetch } = useSession();
+
   return (
     <header className="border-b bg-card sticky top-0 z-10 w-full">
       <div className="flex h-16 items-center px-1 md:px-6 w-full">

@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { googleSignIn } from "@/lib/actions/google-signin";
 import { githubSignIn } from "@/lib/actions/github-signin";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -26,15 +27,24 @@ export default function SignInPage() {
     try {
       if (provider === "github") {
         await githubSignIn();
+        toast({
+          title: "Signin successful",
+          description: "Signin successful and redirecting to your dashboard",
+        });
       } else {
         await googleSignIn();
+        toast({
+          title: "Signin successful",
+          description: "Signin successful and redirecting to your dashboard",
+        });
       }
-
-      // Redirect to home page
-      // setUser(null);
-      // router.push("/");
-    } catch (error) {
+    } catch (error: Error | any) {
       console.error(error);
+      toast({
+        title: "Error signin in",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,5 @@
 import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
-import { JWT as DefaultJWT } from "next-auth/jwt";
+import { JWT as DefaultJWT } from "better-auth/";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
