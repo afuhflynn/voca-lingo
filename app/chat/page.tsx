@@ -19,7 +19,7 @@ export default function ChatPage() {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { data: session, isPending, error, refetch } = useSession();
+  const { data: session, isPending, error } = useSession();
 
   // Vapi api and assistant keys set up
   const vapiKeys = loadVapiEnvs();

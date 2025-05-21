@@ -3,6 +3,8 @@
 // import NextAuth from "next-auth";
 // import authConfig from "@/lib/auth.config";
 
+import { NextRequest, NextResponse } from "next/server";
+
 // /**
 //  * @description A function that handles user sign up and account creation
 //  * @param req
@@ -125,3 +127,12 @@
 //     );
 //   }
 // }
+
+// Create a simple nextjs route
+export function POST(req: NextRequest) {
+  const data = req.url;
+  console.log(data);
+  return NextResponse.json({
+    message: "Good to meet this route",
+  });
+}

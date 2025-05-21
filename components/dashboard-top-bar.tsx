@@ -8,7 +8,7 @@ import { ModeToggle } from "./mode-toggle";
 import { useSession } from "@/lib/auth-client";
 
 export const DashboardTopBar = () => {
-  const { data: session, isPending, error, refetch } = useSession();
+  const { data: session } = useSession();
 
   return (
     <header className="border-b bg-card sticky top-0 z-10 w-full">

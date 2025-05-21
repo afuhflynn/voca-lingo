@@ -32,18 +32,6 @@ export default function SettingsPage() {
   const { data: session, isPending, error } = useSession();
   const user = session?.user;
 
-  if (error) {
-    toast({
-      description:
-        error.message ||
-        "Error connecting to our auth server to get your session. Check your internet connection.",
-      variant: "destructive",
-    });
-  }
-
-  if (isPending) {
-    return null;
-  }
   const [isUpdatingDetails, setIsUpdatingDetails] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -88,6 +76,19 @@ export default function SettingsPage() {
   const handleUpdateForm = (name: string, value: string) => {
     setFormData({ ...formData, [name]: value });
   };
+
+  if (error) {
+    toast({
+      description:
+        error.message ||
+        "Error connecting to our auth server to get your session. Check your internet connection.",
+      variant: "destructive",
+    });
+  }
+
+  if (isPending) {
+    return null;
+  }
 
   return (
     <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 py-6">

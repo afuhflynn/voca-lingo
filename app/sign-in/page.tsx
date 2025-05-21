@@ -10,14 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Logo from "@/components/ui/logo";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { googleSignIn } from "@/lib/actions/google-signin";
 import { githubSignIn } from "@/lib/actions/github-signin";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignInPage() {
-  const router = useRouter();
+  // const router = useRouter();
   // const { user, setUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,7 +38,8 @@ export default function SignInPage() {
           description: "Signin successful and redirecting to your dashboard",
         });
       }
-    } catch (error: Error | any) {
+      // @ts-expect-error: error is of type 'unknown', casting to 'any' to access properties
+    } catch (error: Error) {
       console.error(error);
       toast({
         title: "Error signin in",
