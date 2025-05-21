@@ -13,10 +13,22 @@ import {
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
+import { toast } from "@/hooks/use-toast";
 
 export function UserNav() {
-  const { data: session, isPending, error, refetch } = useSession();
+  const { data: session, isPending, error } = useSession();
+  if (error) {
+    toast({
+      description:
+        error.message ||
+        "Error connecting to our auth server to get your session. Check your internet connection.",
+      variant: "destructive",
+    });
+  }
 
+  if (isPending) {
+    return null;
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
